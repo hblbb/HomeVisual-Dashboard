@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>DepoExpend</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <!-- Load c3.css -->
+    <link href="../css/c3.min.css" rel="stylesheet" type="text/css">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            padding-top: 70px;
+        }
+    </style>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">DepoExpend</a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="#">History Archives</a></li>
+                <li><a href="#">Introuce Datas</a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+<!-- Page Content -->
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <h1>生活費用記錄</h1>
+            <p class="lead">水錶號碼(68-60283607-9)</p>
+            <div id="chart-water"></div>
+
+            <p class="lead">電錶號碼(10-60-0359-18-8及10-60-0359-19-9)</p>
+            <div id="chart-power"></div>
+        </div>
+    </div>
+    <!-- /.row -->
+</div>
+<!-- /.container -->
+
+<!-- jQuery Version 1.11.1 -->
+<script src="../js/jquery.js"></script>
+<!-- Load d3.js and c3.js -->
+<script src="../js/d3.min.js" charset="utf-8"></script>
+<script src="../js/c3.min.js"></script>
+<!-- Bootstrap Core JavaScript -->
+<script src="../js/bootstrap.min.js"></script>
+<!-- Main -->
+<script type="text/javascript">
+var basicURL = 'https://spreadsheet.google.com/feeds/list/';
+
+// 取得陣列的直欄資訊
+function getCol(matrix, col, min, max) {
+    var column = [];
+    for (var i = min; i < max; i++) {
+        column.push(matrix[i][col]);
+    }
+    return column;
+}
+
+// 水費資料處理
+var num_2year = 12;
+var min_query, max_query, mid_query;
+var column1, column2, column3, column4, column5;
+var data_ary = [], column_ary = [];
+var fetchURL = basicURL + '1p-h3Nm9WtujRz11NqhZDrFitAvFGmjSFD0oOf82ezqA/od6/public/basic?alt=json';
+$.getJSON(fetchURL, function(data) {
+    // 確認資料起始與結尾範圍
+    var num_data = data.feed.entry.length;
+    if (num_data >= num_2year) {
+        min_query = num_data - num_2year;
+        max_query = num_data;
+        mid_query = min_query + 6;
+    } else {
+        min_query = 0;
+        max_query = num_data;
+    }
+
+    for (var i = min_query; i < max_query; i++) {
+        //console.log(data.feed.entry.length);
+        data_ary[i] = [];
+        var payload = data.feed.entry[i].content.$t.split(",");
+        for (var j = 0; j < payload.length; j++) {
+            //console.log(payload.length);
+            var content = payload[j].split(":");
+            data_ary[i][j] = content[1].trim();
+            //console.log('row:' + j + ', col:' + i + ', value:' + data_ary[i][j]);
+        }
+    }
+
+    if (num_data >= num_2year) {
+        column1 = getCol(data_ary, 0, mid_query, max_query);
+        column1.unshift('x');
+        column2 = getCol(data_ary, 3, mid_query, max_query);
+        column2.unshift('度數');
+        column3 = getCol(data_ary, 6, mid_query, max_query);
+        column3.unshift('總金額');
+        column4 = getCol(data_ary, 3, min_query, mid_query);
+        column4.unshift('去年同期度數');
+        column5 = getCol(data_ary, 6, min_query, mid_query);
+        column5.unshift('去年同期總金額');
+        column_ary = [column1, column2, column3, column4, column5];
+    } else {
+        column1 = getCol(data_ary, 0, min_query, max_query);
+        column1.unshift('x');
+        column2 = getCol(data_ary, 3, min_query, max_query);
+        column2.unshift('度數');
+        column3 = getCol(data_ary, 6, min_query, max_query);
+        column3.unshift('總金額');
+        column_ary = [column1, column2, column3];
+    }
+
+    var chart_water = c3.generate({
+        bindto: '#chart-water',
+        data: {
+            x: 'x',
+            columns: column_ary,
+            axes: {
+                總金額: 'y',
+                度數: 'y2'
+            },
+            type: 'bar',
+            types: {
+                度數: 'line',
+                去年同期度數: 'line'
+            }
+        },
+        axis: {
+            x: {
+                type: 'timeseries',
+                tick: {
+                    format: '%Y-%m-%d'
+                },
+                label: {
+                    text: '資料筆數(Number)',
+                    position: 'outer-center'
+                }
+            },
+            y: {
+                label: {
+                    text: '金額(Amount)',
+                    position: 'outer-middle'
+                }
+            },
+            y2: {
+                show: true,
+                label: {
+                    text: '度數(Degree)',
+                    position: 'outer-middle'
+                }
+            }
+        }
+    });
+});
+
+// 電費資料處理
+data_ary = [];
+fetchURL = basicURL + '1PvtkWbq00BT1Sq2XOKVD-LXma_KGoToruxZlxCfKm_0/od6/public/basic?alt=json';
+$.getJSON(fetchURL, function(data) {
+    // 確認資料起始與結尾範圍
+    var num_data = data.feed.entry.length;
+    if (num_data >= num_2year) {
+        min_query = num_data - num_2year;
+        max_query = num_data;
+        mid_query = min_query + 6;
+    } else {
+        min_query = 0;
+        max_query = num_data;
+    }
+
+    for (var i = min_query; i < max_query; i++) {
+        data_ary[i] = [];
+        var payload = data.feed.entry[i].content.$t.split(",");
+        for (var j = 0; j < payload.length; j++) {
+            var content = payload[j].split(":");
+            data_ary[i][j] = content[1].trim();
+            //console.log('row:' + j + ', col:' + i + ', value:' + data_ary[i][j]);
+        }
+    }
+
+    if (num_data >= num_2year) {
+        column1 = getCol(data_ary, 0, mid_query, max_query);
+        column1.unshift('x');
+        column2 = getCol(data_ary, 6, mid_query, max_query);
+        column2.unshift('總度數');
+        column3 = getCol(data_ary, 7, mid_query, max_query);
+        column3.unshift('總金額');
+        column4 = getCol(data_ary, 6, min_query, mid_query);
+        column4.unshift('去年同期度數');
+        column5 = getCol(data_ary, 7, min_query, mid_query);
+        column5.unshift('去年同期金額');
+        column_ary = [column1, column2, column3, column4, column5];
+    } else {
+        column1 = getCol(data_ary, 0, min_query, max_query);
+        column1.unshift('x');
+        column2 = getCol(data_ary, 6, min_query, max_query);
+        column2.unshift('總度數');
+        column3 = getCol(data_ary, 7, min_query, max_query);
+        column3.unshift('總金額');
+        column_ary = [column1, column2, column3];
+    }
+
+    var chart_water = c3.generate({
+        bindto: '#chart-power',
+        data: {
+            x: 'x',
+            columns: column_ary,
+            axes: {
+                總金額: 'y',
+                總度數: 'y2'
+            },
+            type: 'bar',
+            types: {
+                總度數: 'line',
+                去年同期度數: 'line'
+            }
+        },
+        axis: {
+            x: {
+                type: 'timeseries',
+                tick: {
+                    format: '%Y-%m-%d'
+                },
+                label: {
+                    text: '資料筆數(Number)',
+                    position: 'outer-center'
+                }
+            },
+            y: {
+                label: {
+                    text: '金額(Amount)',
+                    position: 'outer-middle'
+                }
+            },
+            y2: {
+                show: true,
+                label: {
+                    text: '度數(Degree)',
+                    position: 'outer-middle'
+                }
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>
