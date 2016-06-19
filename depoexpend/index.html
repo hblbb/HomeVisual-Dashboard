@@ -296,7 +296,7 @@ $.getJSON(fetchURL, function(data) {
 
 // 網頁元素轉圖片
 $(".water").click(function() {
-    html2canvas($("chart-water")[0], {
+    html2canvas($("chart-water"), {
         onrendered: function(canvas) {
             var $div = $("fieldset div");
             $div.empty();
