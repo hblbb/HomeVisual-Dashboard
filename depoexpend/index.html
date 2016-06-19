@@ -61,23 +61,21 @@
         <div class="col-lg-12 text-center">
             <h1>生活費用記錄</h1>
             <p class="lead">水錶號碼(68-60283607-9)
-                <button type="button" class="btn btn-default water" aria-label="Left Align">
+                <button type="button" class="btn btn-default" aria-label="Left Align" onclick="capture('water');">
                     <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
                 </button>
             </p>
             <div id="chart-water"></div>
+
             <p class="lead">電錶號碼(10-60-0359-18-8及10-60-0359-19-9)
-                <button type="button" class="btn btn-default power" aria-label="Left Align">
+                <button type="button" class="btn btn-default" aria-label="Left Align" onclick="capture('power');">
                     <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
                 </button>
             </p>
             <div id="chart-power"></div>
 
-            <fieldset>
-                <legend>圖檔</legend>
-                <div>
-                </div>
-            </fieldset>
+            <h1>圖表產生</h1>
+            <canvas id="svg-canvas"></canvas>
         </div>
     </div>
     <!-- /.row -->
@@ -87,14 +85,14 @@
 <!-- jQuery Version 1.11.1 -->
 <script src="../js/jquery.js"></script>
 <!-- Load d3.js and c3.js -->
-<script src="../js/d3.min.js" charset="utf-8"></script>
+<script src="../js/d3.v3.min.js"></script>
 <script src="../js/c3.min.js"></script>
 <!-- Bootstrap Core JavaScript -->
 <script src="../js/bootstrap.min.js"></script>
-<!-- Load html2canvas -->
-<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.9.1.js "></script>
-<script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js "></script>
-<script src="http://html2canvas.hertzen.com/build/html2canvas.js"></script>
+<!-- Load canvg - Javascript SVG parser and renderer on Canvas -->
+<script type="text/javascript" src="http://gabelerner.github.io/canvg/rgbcolor.js"></script>
+<script type="text/javascript" src="http://gabelerner.github.io/canvg/StackBlur.js"></script>
+<script type="text/javascript" src="http://gabelerner.github.io/canvg/canvg.js"></script>
 
 <!-- Main -->
 <script type="text/javascript">
@@ -182,10 +180,10 @@ $.getJSON(fetchURL, function(data) {
                 tick: {
                     format: '%Y-%m-%d'
                 },
-                label: {
-                    text: '資料筆數(Number)',
-                    position: 'outer-center'
-                }
+                //label: {
+                //    text: '資料筆數(Number)',
+                //    position: 'outer-center'
+                //}
             },
             y: {
                 label: {
@@ -272,10 +270,10 @@ $.getJSON(fetchURL, function(data) {
                 tick: {
                     format: '%Y-%m-%d'
                 },
-                label: {
-                    text: '資料筆數(Number)',
-                    position: 'outer-center'
-                }
+                //label: {
+                //    text: '資料筆數(Number)',
+                //    position: 'outer-center'
+                //}
             },
             y: {
                 label: {
@@ -295,15 +293,18 @@ $.getJSON(fetchURL, function(data) {
 });
 
 // 網頁元素轉圖片
-$(".water").click(function() {
-    html2canvas($("chart-water"), {
-        onrendered: function(canvas) {
-            var $div = $("fieldset div");
-            $div.empty();
-            $("<img />", { src: canvas.toDataURL("image/png") }).appendTo($div);
-        }
-    });
-});
+function capture(element) {
+    d3.selectAll("path").attr("fill", "none");
+    d3.selectAll(".tick line, path.domain").attr("stroke", "black");
+	var $container = $('#chart-' + element);
+
+    // Canvg requires trimmed content
+    content = $container.html().trim();
+    canvas = document.getElementById('svg-canvas');
+
+	// Draw svg on canvas
+	canvg(canvas, content);
+};
 </script>
 </body>
 </html>
