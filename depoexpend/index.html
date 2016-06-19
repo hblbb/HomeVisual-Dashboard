@@ -60,11 +60,24 @@
     <div class="row">
         <div class="col-lg-12 text-center">
             <h1>生活費用記錄</h1>
-            <p class="lead">水錶號碼(68-60283607-9)</p>
+            <p class="lead">水錶號碼(68-60283607-9)
+                <button type="button" class="btn btn-default water" aria-label="Left Align">
+                    <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+                </button>
+            </p>
             <div id="chart-water"></div>
-
-            <p class="lead">電錶號碼(10-60-0359-18-8及10-60-0359-19-9)</p>
+            <p class="lead">電錶號碼(10-60-0359-18-8及10-60-0359-19-9)
+                <button type="button" class="btn btn-default power" aria-label="Left Align">
+                    <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+                </button>
+            </p>
             <div id="chart-power"></div>
+
+            <fieldset>
+                <legend>圖檔</legend>
+                <div>
+                </div>
+            </fieldset>
         </div>
     </div>
     <!-- /.row -->
@@ -78,6 +91,11 @@
 <script src="../js/c3.min.js"></script>
 <!-- Bootstrap Core JavaScript -->
 <script src="../js/bootstrap.min.js"></script>
+<!-- Load html2canvas -->
+<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.9.1.js "></script>
+<script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js "></script>
+<script src="http://html2canvas.hertzen.com/build/html2canvas.js"></script>
+
 <!-- Main -->
 <script type="text/javascript">
 var basicURL = 'https://spreadsheet.google.com/feeds/list/';
@@ -272,6 +290,17 @@ $.getJSON(fetchURL, function(data) {
                     position: 'outer-middle'
                 }
             }
+        }
+    });
+});
+
+// 網頁元素轉圖片
+$(".water").click(function() {
+    html2canvas($("chart-water")[0], {
+        onrendered: function(canvas) {
+            var $div = $("fieldset div");
+            $div.empty();
+            $("<img />", { src: canvas.toDataURL("image/png") }).appendTo($div);
         }
     });
 });
